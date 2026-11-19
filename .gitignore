@@ -1,0 +1,11 @@
+# Local review notes (never published)
+REVIEW.md
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+# Secrets and local config
+.env
+*.env
+local.settings.json
+*.publishsettings

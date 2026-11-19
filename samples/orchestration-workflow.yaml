@@ -1,0 +1,49 @@
+kind: workflow
+trigger:
+  kind: OnConversationStart
+  id: trigger_wf
+  actions:
+    - kind: InvokeAzureAgent
+      id: SupplierExtraction
+      agent:
+        name: Strength-Score-Agent
+      conversationId: =System.ConversationId
+      input:
+        messages: =System.LastMessage.Text
+      output:
+        autoSend: true
+        messages: Local.SupplierExtractionJSON
+    - kind: InvokeAzureAgent
+      id: SupplierMatching
+      agent:
+        name: Strength-Score-Agent-2
+      conversationId: =System.ConversationId
+      input:
+        messages: =Local.SupplierExtractionJSON
+      output:
+        autoSend: false
+        messages: Local.SupplierMatchingJSON
+    - kind: ConditionGroup
+      id: SupplierMatchingCondition
+      conditions:
+        - id: SupplierMatchedCondition
+          condition: =Not(IsBlank(Local.SupplierMatchingJSON))
+          actions:
+            - kind: InvokeAzureAgent
+              id: EdgeMatching
+              agent:
+                name: Strength-Score-Agent-3
+              conversationId: =System.ConversationId
+              input:
+                messages: =Local.SupplierMatchingJSON
+              output:
+                autoSend: false
+                messages: Local.EdgeMatchingJSON
+            - kind: EndConversation
+              id: EndAfterEdgeMatching
+      elseActions:
+        - kind: EndConversation
+          id: EndNoSupplierMatches
+id: StrengthScoreOrchestration
+name: StrengthScore-Orchestration
+description: Strength Score supplier extraction, ClientDim matching, and edge matching workflow.
